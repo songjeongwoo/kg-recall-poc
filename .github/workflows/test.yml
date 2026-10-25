@@ -1,0 +1,26 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: uv venv && uv pip install -e ".[dev]"
+      - name: Check ontology and shapes parse
+        run: uv run python -c "from rdflib import Graph; Graph().parse('ontology/recall.ttl'); Graph().parse('ontology/shapes.ttl'); print('ok')"
+      - name: Check evaluation files are consistent
+        run: uv run python -c "import json; q=[json.loads(l) for l in open('eval/questions.jsonl', encoding='utf-8')]; assert len(q)==24 and len({x['id'] for x in q})==24; print(len(q), 'questions')"
+      - name: Run tests
+        run: uv run pytest -q tests
