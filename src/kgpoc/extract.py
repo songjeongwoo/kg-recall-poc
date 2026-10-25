@@ -26,6 +26,8 @@ HAZARDS = ["Fire", "Crash", "Injury", "LossOfDrivePower", "BrakingLoss", "Steeri
            "VisibilityLoss", "OccupantProtectionLoss", "RegulatoryNoncompliance", "OtherHazard"]
 REMEDIES = ["Replace", "Repair", "Inspect", "SoftwareUpdate", "Relabel", "Repurchase", "OtherRemedy"]
 PROMPT_VERSION = "v1"
+# 2026-10-25 추출(408건)은 이 격리 옵션 없이 돌렸다. 이후 실행부터 적용된다.
+from .llm import ISOLATION  # noqa: E402
 
 
 class Extraction(BaseModel):
@@ -79,7 +81,7 @@ def batch_prompt(camps: list[dict]) -> str:
 
 def call_claude_cli(prompt: str, model: str | None) -> dict:
     cmd = ["claude", "-p", "--output-format", "json", "--no-session-persistence",
-           "--tools", "", "--system-prompt", SYSTEM, "--json-schema", json.dumps(SCHEMA)]
+           "--tools", "", *ISOLATION, "--system-prompt", SYSTEM, "--json-schema", json.dumps(SCHEMA)]
     if model:
         cmd += ["--model", model]
     r = subprocess.run(cmd, input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=600)

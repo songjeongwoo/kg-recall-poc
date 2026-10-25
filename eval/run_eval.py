@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 
 from kgpoc.graph_qa import write_sparql
-from kgpoc.llm import ask_json
+from kgpoc.llm import MODELS, ask_json, usage_get, usage_reset
 from kgpoc.vector_index import hybrid_search, search
 
 HERE = Path(__file__).parent
@@ -58,7 +58,8 @@ def graph_direct(question: str, model: str) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--method", choices=["vector", "hybrid", "graph", "graph_direct"], required=True)
-    ap.add_argument("--model", default="sonnet")
+    ap.add_argument("--model", default="sonnet", help="haiku | sonnet | opus | fable 또는 모델 ID")
+    ap.add_argument("--run", type=int, default=1, help="반복 회차. 결과 파일 이름에 _rN으로 붙는다")
     ap.add_argument("--k", type=int, default=10)
     ap.add_argument("--only", default=None, help="쉼표로 질문 ID 지정")
     a = ap.parse_args()
@@ -67,7 +68,7 @@ def main() -> None:
     if a.only:
         keep = set(a.only.split(","))
         qs = [q for q in qs if q["id"] in keep]
-    out = HERE / "results" / f"{a.method}_{a.model}.jsonl"
+    out = HERE / "results" / f"{a.method}_{a.model}_r{a.run}.jsonl"
     out.parent.mkdir(exist_ok=True)
     done = {json.loads(l)["id"] for l in out.open(encoding="utf-8")} if out.exists() else set()
     with out.open("a", encoding="utf-8", newline="\n") as f:
@@ -75,6 +76,7 @@ def main() -> None:
             if q["id"] in done:
                 continue
             t0 = time.time()
+            usage_reset()
             try:
                 if a.method == "graph":
                     res = graph(q["question"], a.model)
@@ -84,8 +86,10 @@ def main() -> None:
                     res = rag(q["question"], a.model, a.k, a.method == "hybrid")
             except Exception as ex:
                 res = {"answer": [], "error": f"{type(ex).__name__}: {ex}"[:500]}
-            rec = {"id": q["id"], "method": a.method, "model": a.model, "k": a.k if not a.method.startswith("graph") else None,
-                   "seconds": round(time.time() - t0, 1)} | res
+            u = usage_get()
+            rec = {"id": q["id"], "method": a.method, "model": a.model, "model_id": MODELS.get(a.model, a.model), "run": a.run,
+                   "k": a.k if not a.method.startswith("graph") else None,
+                   "seconds": round(time.time() - t0, 1), "llm_calls": u["calls"], "cost_usd": round(u["cost_usd"], 5)} | res
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             f.flush()
             print(f"{q['id']:3} {rec['seconds']:5}s {str(rec['answer'])[:100]}", flush=True)
