@@ -13,6 +13,7 @@ dependencies = [
 llm = ["anthropic>=0.40", "openai>=1.50"]
 mcp = ["mcp>=2.0"]
 rag = ["fastembed>=0.7", "rank-bm25>=0.2", "numpy>=1.26"]
+viz = ["networkx>=3.4", "matplotlib>=3.8"]
 a2a = ["a2a-sdk[http-server]>=1.0", "uvicorn>=0.30", "httpx>=0.28"]
 dev = ["pytest>=8"]
 

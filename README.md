@@ -9,6 +9,13 @@ Hyundai, Kia, Genesis 리콜 캠페인 408건(2010년 이후)을 온톨로지에
 
 > 개인 PoC (2026-10). 공개 데이터만 쓰며 회사 데이터는 쓰지 않는다.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/graph_overview_dark.png">
+  <img alt="리콜 지식그래프 전체: 리콜 캠페인 408, 차종 87, 부품 분류 222" src="docs/graph_overview_light.png">
+</picture>
+
+리콜 캠페인(파랑)이 대상 차종(주황)과 결함 부품 분류(초록)에 이어진다. 많은 리콜이 걸린 차종과 부품이 가운데로 모인다. 그림은 `python scripts/visualize.py`로 다시 만든다.
+
 ## 결과 요약
 
 질문 24개를 **4개 모델 x 2개 방식 x 3회** 풀었다. 모든 방식이 같은 모델, 같은 답변 형식 규칙을 쓰고, RAG는 캠페인 문서 상위 10개를 문맥으로 준다.
@@ -27,6 +34,11 @@ Hyundai, Kia, Genesis 리콜 캠페인 408건(2010년 이후)을 온톨로지에
 
 \* Claude Code CLI가 보고하는 API 가격 환산값(`total_cost_usd`). 구독으로 돌려 실제 청구는 없다. 576문항 전체 합계 약 $8.95.
 질문별, 회차별 결과는 `eval/results/summary.md`와 `eval/results/*_r{1,2,3}.jsonl`에 있다.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/graph_abs_dark.png">
+  <img alt="ABS 제어 모듈 한 부품에서 리콜 17건, 차종 33개로 퍼지는 부분 그래프" src="docs/graph_abs_light.png">
+</picture>
 
 **읽는 법**
 
@@ -92,6 +104,20 @@ eval/           질문 24개, 정답, 세 방식 실행과 채점
 
 ## 온톨로지 (ontology/recall.ttl)
 
+```mermaid
+graph LR
+  Campaign["RecallCampaign<br/>리콜 캠페인"] -- affects --> Variant["VehicleVariant<br/>연식별 차종"]
+  Variant -- ofModel --> Model["VehicleModel<br/>차종"]
+  Model -- ofMake --> Make["Make<br/>브랜드"]
+  Campaign -- affectsComponent --> Comp["Component<br/>부품 분류"]
+  Comp -- "skos:broader" --> Comp
+  Campaign -- filedBy --> Mfr["Manufacturer<br/>신고 법인"]
+  Campaign -. "hasHazard (LLM 추출)" .-> Hazard["Hazard<br/>위험 유형 10개"]
+  Campaign -. "remedyType (LLM 추출)" .-> Remedy["RemedyType<br/>조치 유형 7개"]
+```
+
+실선은 원본 정형 칸에서, 점선은 LLM이 결함 설명 문장에서 뽑아 SHACL 검사를 통과한 값에서 나온 관계다.
+
 | 클래스 | 뜻 | 주요 관계 |
 |---|---|---|
 | `RecallCampaign` | 리콜 캠페인(NHTSA 리콜 번호) | `filedBy` → Manufacturer, `affects` → VehicleVariant, `affectsComponent` → Component, `hasHazard` → Hazard, `remedyType` → RemedyType |
@@ -122,7 +148,7 @@ eval/           질문 24개, 정답, 세 방식 실행과 채점
 ## 실행
 
 ```bash
-uv venv && uv pip install -e ".[mcp,rag,a2a,dev]"
+uv venv && uv pip install -e ".[mcp,rag,a2a,viz,dev]"
 python -m kgpoc.download                 # NHTSA 원본 (~15MB zip)
 python -m kgpoc.prepare                  # data/processed/campaigns.jsonl
 python -m kgpoc.extract --model haiku    # LLM 추출 (기본: 로컬 Claude Code CLI, --backend anthropic 가능)
