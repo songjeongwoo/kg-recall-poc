@@ -1,0 +1,10 @@
+# 화재 위험(LLM 추출)으로 분류됐고 '실외 주차' 권고가 붙은 리콜: 최근순
+PREFIX rc: <https://w3id.org/kg-recall-poc/ontology#>
+SELECT ?cn ?date (GROUP_CONCAT(DISTINCT ?m; separator=", ") AS ?models) ?cause ?affected
+WHERE {
+  ?c rc:hasHazard rc:Fire ; rc:parkOutside true ; rc:campaignNumber ?cn ; rc:reportReceivedDate ?date .
+  OPTIONAL { ?c rc:rootCause ?cause }
+  OPTIONAL { ?c rc:potentiallyAffected ?affected }
+  ?c rc:affects/rc:ofModel/rc:name ?m .
+}
+GROUP BY ?cn ?date ?cause ?affected ORDER BY DESC(?date) LIMIT 15

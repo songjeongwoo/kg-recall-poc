@@ -1,0 +1,10 @@
+# 신고 연도별 위험 유형 분포 (LLM 추출)
+PREFIX rc: <https://w3id.org/kg-recall-poc/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?year ?hazard (COUNT(DISTINCT ?c) AS ?n)
+WHERE {
+  ?c rc:hasHazard ?h ; rc:reportReceivedDate ?d .
+  ?h rdfs:label ?hazard . FILTER(LANG(?hazard) = "ko")
+  BIND(YEAR(?d) AS ?year)
+}
+GROUP BY ?year ?hazard ORDER BY DESC(?year) DESC(?n)

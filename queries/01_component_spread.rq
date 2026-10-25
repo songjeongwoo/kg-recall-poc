@@ -1,0 +1,11 @@
+# 최상위 부품 분류별로, 리콜된 차종 수와 캠페인 수 (여러 차종에 걸친 부품 결함 찾기)
+PREFIX rc: <https://w3id.org/kg-recall-poc/ontology#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+SELECT ?top (COUNT(DISTINCT ?model) AS ?models) (COUNT(DISTINCT ?c) AS ?campaigns)
+WHERE {
+  ?c rc:affectsComponent ?comp ; rc:affects/rc:ofModel ?model .
+  ?comp skos:broader* ?topNode .
+  FILTER NOT EXISTS { ?topNode skos:broader ?x }
+  ?topNode rc:name ?top .
+}
+GROUP BY ?top ORDER BY DESC(?models) LIMIT 10

@@ -1,0 +1,37 @@
+@prefix rc:   <https://w3id.org/kg-recall-poc/ontology#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+# 그래프에 넣기 전에 지켜야 할 형식. LLM 추출 결과가 어휘 밖의 값을 만들면 여기서 걸린다.
+
+rc:RecallCampaignShape a sh:NodeShape ;
+    sh:targetClass rc:RecallCampaign ;
+    sh:property [ sh:path rc:campaignNumber ; sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:pattern "^[0-9]{2}[VEIT][0-9A-Z]{6}$" ] ;
+    sh:property [ sh:path rc:filedBy ; sh:class rc:Manufacturer ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path rc:affects ; sh:class rc:VehicleVariant ; sh:minCount 1 ] ;
+    sh:property [ sh:path rc:affectsComponent ; sh:class rc:Component ; sh:minCount 1 ] ;
+    sh:property [ sh:path rc:reportReceivedDate ; sh:datatype xsd:date ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path rc:potentiallyAffected ; sh:datatype xsd:integer ; sh:maxCount 1 ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path rc:doNotDrive ; sh:datatype xsd:boolean ; sh:maxCount 1 ] ;
+    sh:property [ sh:path rc:parkOutside ; sh:datatype xsd:boolean ; sh:maxCount 1 ] ;
+    # LLM 추출 항목: 통제 어휘의 개체만 허용
+    sh:property [ sh:path rc:hasHazard ; sh:class rc:Hazard ; sh:minCount 0 ] ;
+    sh:property [ sh:path rc:remedyType ; sh:class rc:RemedyType ; sh:maxCount 2 ] ;
+    sh:property [ sh:path rc:rootCause ; sh:datatype xsd:string ; sh:maxCount 1 ; sh:maxLength 200 ] .
+
+rc:VehicleVariantShape a sh:NodeShape ;
+    sh:targetClass rc:VehicleVariant ;
+    sh:property [ sh:path rc:ofModel ; sh:class rc:VehicleModel ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path rc:modelYear ; sh:datatype xsd:gYear ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+rc:VehicleModelShape a sh:NodeShape ;
+    sh:targetClass rc:VehicleModel ;
+    sh:property [ sh:path rc:ofMake ; sh:class rc:Make ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path rc:name ; sh:minCount 1 ] .
+
+rc:ComponentShape a sh:NodeShape ;
+    sh:targetClass rc:Component ;
+    sh:property [ sh:path rc:name ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path skos:broader ; sh:class rc:Component ; sh:maxCount 1 ] .

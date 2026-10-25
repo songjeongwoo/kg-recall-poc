@@ -1,0 +1,142 @@
+@prefix rc:   <https://w3id.org/kg-recall-poc/ontology#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<https://w3id.org/kg-recall-poc/ontology>
+    a owl:Ontology ;
+    rdfs:label "Vehicle Recall Ontology (PoC)"@en ;
+    rdfs:comment "NHTSA 리콜 캠페인, 차량, 부품, 위험, 조치를 표현하는 PoC용 최소 온톨로지."@ko .
+
+#################################################################
+# Classes
+#################################################################
+
+rc:RecallCampaign a owl:Class ;
+    rdfs:label "Recall campaign"@en , "리콜 캠페인"@ko ;
+    rdfs:comment "NHTSA 리콜 번호(CAMPNO) 하나에 대응한다."@ko .
+
+rc:Manufacturer a owl:Class ;
+    rdfs:label "Manufacturer"@en , "제조사(신고 법인)"@ko .
+
+rc:Make a owl:Class ;
+    rdfs:label "Make"@en , "브랜드"@ko .
+
+rc:VehicleModel a owl:Class ;
+    rdfs:label "Vehicle model"@en , "차종"@ko .
+
+rc:VehicleVariant a owl:Class ;
+    rdfs:label "Model-year vehicle"@en , "연식별 차종"@ko ;
+    rdfs:comment "차종과 연식의 조합. 리콜 대상의 최소 단위."@ko .
+
+rc:Component a owl:Class ;
+    rdfs:label "Component"@en , "부품 분류"@ko ;
+    rdfs:comment "NHTSA COMPNAME의 콜론 계층. 상위 분류는 skos:broader로 잇는다."@ko .
+
+rc:Hazard a owl:Class ;
+    rdfs:label "Hazard"@en , "위험 유형"@ko ;
+    rdfs:comment "결함이 일으키는 결과. 통제 어휘(아래 개체)만 쓴다."@ko .
+
+rc:RemedyType a owl:Class ;
+    rdfs:label "Remedy type"@en , "조치 유형"@ko .
+
+#################################################################
+# Object properties
+#################################################################
+
+rc:filedBy a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range rc:Manufacturer ;
+    rdfs:label "filed by"@en , "신고 법인"@ko .
+
+rc:affects a owl:ObjectProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range rc:VehicleVariant ;
+    rdfs:label "affects"@en , "대상 차량"@ko .
+
+rc:affectsComponent a owl:ObjectProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range rc:Component ;
+    rdfs:label "affects component"@en , "결함 부품"@ko .
+
+rc:hasHazard a owl:ObjectProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range rc:Hazard ;
+    rdfs:label "has hazard"@en , "위험 유형"@ko .
+
+rc:remedyType a owl:ObjectProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range rc:RemedyType ;
+    rdfs:label "remedy type"@en , "조치 유형"@ko .
+
+rc:ofModel a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain rc:VehicleVariant ; rdfs:range rc:VehicleModel .
+
+rc:ofMake a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain rc:VehicleModel ; rdfs:range rc:Make .
+
+#################################################################
+# Datatype properties
+#################################################################
+
+rc:campaignNumber a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:string .
+
+rc:manufacturerCampaignNumber a owl:DatatypeProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:string .
+
+rc:reportReceivedDate a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:date .
+
+rc:potentiallyAffected a owl:DatatypeProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:integer ;
+    rdfs:comment "POTAFF. 같은 캠페인의 행마다 같은 값이 반복되므로 최댓값을 쓴다."@ko .
+
+rc:initiatedBy a owl:DatatypeProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:string ;
+    rdfs:comment "MFR(제조사 자진), ODI, OVSC."@ko .
+
+rc:doNotDrive a owl:DatatypeProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:boolean .
+
+rc:parkOutside a owl:DatatypeProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:boolean .
+
+rc:defectSummary a owl:DatatypeProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:string .
+
+rc:consequenceSummary a owl:DatatypeProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:string .
+
+rc:correctiveSummary a owl:DatatypeProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:string .
+
+rc:rootCause a owl:DatatypeProperty ;
+    rdfs:domain rc:RecallCampaign ; rdfs:range xsd:string ;
+    rdfs:comment "LLM이 결함 요약에서 뽑은 원인 한 구절."@ko .
+
+rc:modelYear a owl:DatatypeProperty , owl:FunctionalProperty ;
+    rdfs:domain rc:VehicleVariant ; rdfs:range xsd:gYear .
+
+rc:name a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+#################################################################
+# Controlled vocabularies
+#################################################################
+
+rc:Fire          a rc:Hazard ; rdfs:label "fire"@en , "화재"@ko .
+rc:Crash         a rc:Hazard ; rdfs:label "crash"@en , "충돌"@ko .
+rc:Injury        a rc:Hazard ; rdfs:label "injury"@en , "부상"@ko .
+rc:LossOfDrivePower a rc:Hazard ; rdfs:label "loss of drive power"@en , "주행 동력 상실"@ko .
+rc:BrakingLoss   a rc:Hazard ; rdfs:label "reduced braking"@en , "제동력 저하"@ko .
+rc:SteeringLoss  a rc:Hazard ; rdfs:label "loss of steering"@en , "조향 상실"@ko .
+rc:VisibilityLoss a rc:Hazard ; rdfs:label "reduced visibility"@en , "시인성 저하"@ko .
+rc:OccupantProtectionLoss a rc:Hazard ; rdfs:label "reduced occupant protection"@en , "탑승자 보호 저하"@ko .
+rc:RegulatoryNoncompliance a rc:Hazard ; rdfs:label "regulatory noncompliance"@en , "안전기준 부적합"@ko .
+rc:OtherHazard   a rc:Hazard ; rdfs:label "other"@en , "기타"@ko .
+
+rc:Replace        a rc:RemedyType ; rdfs:label "replace"@en , "교체"@ko .
+rc:Repair         a rc:RemedyType ; rdfs:label "repair or modify"@en , "수리·개조"@ko .
+rc:Inspect        a rc:RemedyType ; rdfs:label "inspect"@en , "점검"@ko .
+rc:SoftwareUpdate a rc:RemedyType ; rdfs:label "software update"@en , "소프트웨어 업데이트"@ko .
+rc:Relabel        a rc:RemedyType ; rdfs:label "label or manual update"@en , "라벨·설명서 교체"@ko .
+rc:Repurchase     a rc:RemedyType ; rdfs:label "repurchase"@en , "환매"@ko .
+rc:OtherRemedy    a rc:RemedyType ; rdfs:label "other"@en , "기타"@ko .

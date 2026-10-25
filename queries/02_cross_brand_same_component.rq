@@ -1,0 +1,11 @@
+# 같은 세부 부품 분류가 Hyundai와 Kia 양쪽 리콜에 모두 나온 경우 (브랜드를 넘는 공통 결함 후보)
+PREFIX rc: <https://w3id.org/kg-recall-poc/ontology#>
+SELECT ?component (GROUP_CONCAT(DISTINCT ?cn; separator=", ") AS ?campaigns)
+WHERE {
+  ?c1 rc:affectsComponent ?comp ; rc:affects/rc:ofModel/rc:ofMake/rc:name "HYUNDAI" .
+  ?c2 rc:affectsComponent ?comp ; rc:affects/rc:ofModel/rc:ofMake/rc:name "KIA" .
+  ?comp rc:name ?component .
+  FILTER(CONTAINS(?component, ":"))
+  { ?c1 rc:campaignNumber ?cn } UNION { ?c2 rc:campaignNumber ?cn }
+}
+GROUP BY ?component ORDER BY DESC(COUNT(DISTINCT ?cn)) LIMIT 10
