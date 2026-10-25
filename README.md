@@ -100,6 +100,12 @@ eval/           질문 24개, 정답, 세 방식 실행과 채점
 - **A2A 서버**는 같은 그래프를 에이전트로 준다. 호출하는 쪽은 자연어로 일을 맡기고, 이 에이전트가 질의 작성, 실행, 재시도, 답변을
   처리한 뒤 작업(Task) 상태와 결과물(Artifact: 근거 표와 SPARQL)로 돌려준다. 결과가 없으면 `TASK_STATE_INPUT_REQUIRED`로
   되묻고, 같은 작업에 보충 입력을 받으면 이어서 처리한다(`scripts/a2a_demo.py`).
+- **확인한 범위 (2026-10-26)**:
+  - MCP: Claude Code(Claude Sonnet 5.5)에 이 서버만 연결하고 "텔루라이드 리콜과 같은 세부 부품으로 리콜된 Genesis 차종은?"이라고 묻자,
+    Claude가 스스로 `describe_ontology` → `sparql_select` 순서로 도구를 골라 SPARQL을 쓰고 Genesis 7개 차종으로 답했다(평가 질문 M5의 정답과 같음).
+    `claude -p --strict-mcp-config --mcp-config '{"mcpServers":{"recall-kg":{...}}}'`로 실행했다.
+  - A2A: 서버 쪽 에이전트(SPARQL 작성, 실행, 되묻기)는 실제로 동작하지만, 일을 맡기는 쪽은 순서를 정해 둔 데모 클라이언트(`scripts/a2a_demo.py`)였다.
+    LLM 에이전트가 스스로 판단해 이 에이전트에게 위임하는 구성은 확인하지 않았다.
 - 정리: 내부 도구를 LLM 앱에 붙일 때는 MCP, 다른 팀이나 다른 시스템의 에이전트에게 오래 걸리거나 되물을 수 있는 일을 맡길 때는 A2A가 맞다.
 
 ## 온톨로지 (ontology/recall.ttl)
