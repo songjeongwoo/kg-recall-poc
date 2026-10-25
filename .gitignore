@@ -7,3 +7,5 @@ __pycache__/
 data/graph.ttl
 data/extracted/run.log
 data/extracted/rejected.jsonl
+eval/results/run_*.log
+data/a2a_server.log

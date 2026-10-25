@@ -93,6 +93,31 @@ Q = [
 ]
 
 
+# 문장 이해 질문: 정답은 그래프가 아니라 원문 결함/결과 문장의 정규식 일치로 계산한다(그래프와 독립).
+# 질문은 키워드를 그대로 쓰지 않고 풀어서 묻는다.
+# T3 규칙은 1차 채점 뒤 세 방식이 공통으로 답한 11E040000, 11E041000을 원문 확인한 결과 "tow package wiring harness"
+# 표현을 놓친 것이라 (hitch|package)로 고쳤다(2026-10-25). 고친 규칙은 세 방식에 똑같이 적용된다.
+TEXT_Q = [
+    ("T1", "Which recalls concern leaks of the hydrogen fuel used by fuel-cell vehicles, or failure to detect such leaks?",
+     "수소연료전지차의 수소 누출(또는 누출 감지 실패)과 관련된 리콜은?", r"hydrogen"),
+    ("T2", "Which recalls concern the unit that charges the 12-volt battery in electrified vehicles (the integrated charging control unit)?",
+     "전동화 차량에서 12V 배터리를 충전하는 통합 충전 제어 장치(ICCU) 관련 리콜은?",
+     r"\bICCU\b|Integrated Charging Control Unit"),
+    ("T3", "Which recalls are about water or moisture getting into an electronic module through towing (trailer hitch) wiring?",
+     "견인(트레일러 히치) 배선을 통해 물이나 습기가 전자 모듈로 들어가는 문제의 리콜은?",
+     r"(tow|trailer) (hitch|package).*(water|moisture)|(water|moisture).*(tow|trailer) (hitch|package)"),
+    ("T4", "Which recalls describe premature wear of the engine's connecting rod bearings?",
+     "엔진 커넥팅 로드 베어링의 조기 마모를 다룬 리콜은?", r"connecting rod bearing"),
+]
+
+
+def text_gold(pattern: str) -> list[str]:
+    import re
+    camps = [json.loads(l) for l in (Path(__file__).parents[1] / "data/processed/campaigns.jsonl").open(encoding="utf-8")]
+    r = re.compile(pattern, re.I)
+    return sorted(c["campaign"] for c in camps if r.search(c["defect"] + " " + c["consequence"]))
+
+
 def main() -> None:
     out = Path(__file__).with_name("questions.jsonl")
     with out.open("w", encoding="utf-8", newline="\n") as f:
@@ -107,6 +132,12 @@ def main() -> None:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             shown = gold if not isinstance(gold, list) else f"{len(gold)} items: {gold[:6]}"
             print(f"{qid:3} {kind:9} {shown}")
+        for qid, en, ko, pattern in TEXT_Q:
+            gold = text_gold(pattern)
+            rec = {"id": qid, "type": "text", "grading": "set", "question": en, "question_ko": ko,
+                   "gold": gold, "gold_rule": f"regex on defect+consequence text: {pattern}"}
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            print(f"{qid:3} text      {len(gold)} items: {gold}")
     print(f"-> {out}")
 
 
